@@ -211,94 +211,101 @@ class SATSolver:
 import os
 import time
 
-
 if __name__ == "__main__":
-  # 테스트 폴더 경로
-  test_folder = r"/Users/yongmin/Desktop/semester_4_2/ProgramVerfication/sat"
+    # 테스트 폴더 경로
+    test_folder = r"/Users/yongmin/Desktop/semester_4_2/ProgramVerfication/sat"
 
-  # 결과 저장
-  results = []
+    # 결과 저장
+    results = []
 
-  # problem_001.cnf부터 problem_050.cnf까지
-  for i in range(1, 51):
-    filename = f"problem_{i:03d}.cnf"  # problem_001, problem_002, ...
-    filepath = os.path.join(test_folder, filename)
+    # 문제가 되는 케이스만 테스트
+    problem_numbers = [15, 18, 31]
 
-    if not os.path.exists(filepath):
-      print(f"❌ {filename} not found")
-      continue
+    for i in problem_numbers:
+        filename = f"problem_{i:03d}.cnf"
+        filepath = os.path.join(test_folder, filename)
 
-    print(f"\n{'=' * 50}")
-    print(f"Testing: {filename}")
-    print(f"{'=' * 50}")
+        if not os.path.exists(filepath):
+            print(f"❌ {filename} not found")
+            continue
 
-    try:
-      # 시간 측정 시작
-      start_time = time.time()
+        print(f"\n{'=' * 50}")
+        print(f"Testing: {filename}")
+        print(f"{'=' * 50}")
 
-      # 파일 파싱
-      clauses_dict, num_variables, num_clauses = get_file(filepath)
-      print(f"Variables: {num_variables}, Clauses: {num_clauses}")
+        try:
+            # 시간 측정 시작
+            start_time = time.time()
 
-      result = False
-      for attempt in range(5):
-          if attempt > 0:
-              print(f"  🔄 Retry {attempt}...")
+            # 파일 파싱
+            clauses_dict, num_variables, num_clauses = get_file(filepath)
+            print(f"Variables: {num_variables}, Clauses: {num_clauses}")
 
-          solver = SATSolver(num_variables, clauses_dict)
+            # 최대 3번 시도 (순방향, 역방향, 중간부터)
+            result = False
+            for attempt in range(5):
+                if attempt > 0:
+                    print(f"  🔄 Retry {attempt}...")
 
-          if attempt == 0:
-              solver.reverse_order = False
-              solver.middle_first = False
-          else:
-              solver.use_random = True
+                solver = SATSolver(num_variables, clauses_dict)
 
-          result = solver.solve()
-          if result:
-              break
+                if attempt == 0:
+                    solver.reverse_order = False
+                    solver.middle_first = False
+                elif attempt == 1:
+                    solver.reverse_order = True
+                elif attempt == 2:
+                    solver.middle_first = True
+                else:
+                    # 3번째, 4번째는 랜덤
+                    solver.use_random = True
 
-      # 시간 측정 종료
-      elapsed_time = time.time() - start_time
+                result = solver.solve()
+                if result:
+                    break
 
-      # 결과 저장
-      results.append({
-        'file': filename,
-        'variables': num_variables,
-        'clauses': num_clauses,
-        'time': elapsed_time,
-        'result': 'SAT' if result != False else 'UNSAT'
-      })
+            # 시간 측정 종료
+            elapsed_time = time.time() - start_time
 
-      print(f"✅ Time: {elapsed_time:.3f}s")
+            # 결과 저장
+            results.append({
+                'file': filename,
+                'variables': num_variables,
+                'clauses': num_clauses,
+                'time': elapsed_time,
+                'result': 'SAT' if result else 'UNSAT'
+            })
 
-    except Exception as e:
-      print(f"❌ Error: {e}")
-      results.append({
-        'file': filename,
-        'error': str(e)
-      })
+            print(f"✅ Time: {elapsed_time:.3f}s")
 
-  # 최종 결과 출력
-  print(f"\n{'=' * 70}")
-  print("SUMMARY")
-  print(f"{'=' * 70}")
-  print(f"{'File':<20} {'Variables':<12} {'Clauses':<10} {'Time (s)':<12} {'Result'}")
-  print(f"{'-' * 70}")
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            results.append({
+                'file': filename,
+                'error': str(e)
+            })
 
-  for r in results:
-    if 'error' in r:
-      print(f"{r['file']:<20} ERROR: {r['error']}")
-    else:
-      print(f"{r['file']:<20} {r['variables']:<12} {r['clauses']:<10} {r['time']:<12.3f} {r['result']}")
+    # 최종 결과 출력
+    print(f"\n{'=' * 70}")
+    print("SUMMARY")
+    print(f"{'=' * 70}")
+    print(f"{'File':<20} {'Variables':<12} {'Clauses':<10} {'Time (s)':<12} {'Result'}")
+    print(f"{'-' * 70}")
 
-  # 통계
-  success_count = sum(1 for r in results if 'error' not in r)
-  total_time = sum(r['time'] for r in results if 'time' in r)
-  avg_time = total_time / success_count if success_count > 0 else 0
+    for r in results:
+        if 'error' in r:
+            print(f"{r['file']:<20} ERROR: {r['error']}")
+        else:
+            print(f"{r['file']:<20} {r['variables']:<12} {r['clauses']:<10} {r['time']:<12.3f} {r['result']}")
 
-  print(f"\n{'=' * 70}")
-  print(f"Total: {len(results)} files")
-  print(f"Success: {success_count} files")
-  print(f"Total Time: {total_time:.3f}s")
-  print(f"Average Time: {avg_time:.3f}s")
-  print(f"{'=' * 70}")
+    # 통계
+    success_count = sum(1 for r in results if 'error' not in r)
+    total_time = sum(r['time'] for r in results if 'time' in r)
+    avg_time = total_time / success_count if success_count > 0 else 0
+
+    print(f"\n{'=' * 70}")
+    print(f"Total: {len(results)} files")
+    print(f"Success: {success_count} files")
+    print(f"Total Time: {total_time:.3f}s")
+    print(f"Average Time: {avg_time:.3f}s")
+    print(f"{'=' * 70}")

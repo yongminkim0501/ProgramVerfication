@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 테스트 데이터
+sat/
+unsat/
+*.cnf
+
+# 결과 파일
+results/
+output/
+*.log
+*.txt
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
